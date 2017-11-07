@@ -17,17 +17,12 @@
   "contributes": {
     "configuration": {
       "type": "object",
-      "title": "ymp.properties configuration",
+      "title": "ymate-vscode-extension configuration",
       "properties": {
-        "ymp.properties.debug": {
+        "ymate.enbaled": {
           "type": "boolean",
           "default": false,
-          "description": "Specifies debug mode"
-        },
-        "ymp.properties.insiders": {
-          "type": "boolean",
-          "default": false,
-          "description": "Specifies whether or not to enable new experimental features (expect there to be issues)"
+          "description": "是否启用ymate插件"
         }
       }
     },
@@ -38,14 +33,43 @@
       "explorer/context": [],
       "scm/resourceGroup/context": [],
       "scm/resourceState/context": [],
-      "view/title": [],
+      "view/title": [
+        {
+          "command": "ymate.extensions.properties.tree.expand",
+          "group": "navigation@1"
+        },
+        {
+          "command": "ymate.extensions.properties.tree.collpase",
+          "group": "navigation@1"
+        }
+      ],
       "view/item/context": []
     },
+    "commands": [
+      {
+        "command": "ymate.extensions.properties.tree.collpase",
+        "title": "全部收起",
+        "category": "ymate.explorer",
+        "icon": {
+          "dark": "images/dark/icon-ymate-collpase.svg",
+          "light": "images/light/icon-ymate-collpase.svg"
+        }
+      },
+      {
+        "command": "ymate.extensions.properties.tree.expand",
+        "title": "全部展开",
+        "category": "ymate.explorer",
+        "icon": {
+          "dark": "images/dark/icon-ymate-expand.svg",
+          "light": "images/light/icon-ymate-expand.svg"
+        }
+      }
+    ],
     "views": {
       "explorer": [
         {
-          "id": "ymp.properties.explorer",
-          "name": "ymp.properties"
+          "id": "ymate.extensions.properties.explorer",
+          "name": "ymate 资源管理器"
         }
       ]
     }

@@ -1,9 +1,18 @@
 import * as vscode from 'vscode';
 import { ExplorerNode } from './ExplorerNode';
-import { MessagesNode } from './MessagesNode';
-import { PropertiesNode } from './PropertiesNode';
+import { MessagesNode } from './MessageNode';
+import { PropertiesNode } from './PropertyNode';
+import { FiltersNode } from "./FilterNode";
+import { ControllersNode } from "./ControllerNode";
 
+/**
+ * 表示一个TreeData根节点对象实例
+ * @author smalls
+ */
 export class RootNode extends ExplorerNode {
+  /** 构造一个TreeData根节点对象实例
+   * @param context 扩展对象上下文实例
+   */
   constructor(context: vscode.ExtensionContext) {
     super();
     this.context = context;
@@ -21,6 +30,8 @@ export class RootNode extends ExplorerNode {
   getChildren() {
     return [
       new MessagesNode(this.context),
+      new FiltersNode(this.context),
+      new ControllersNode(this.context),
       new PropertiesNode(this.context)
     ];
   }
