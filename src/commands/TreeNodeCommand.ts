@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
-import { Command } from "../ymate/commands/Command";
-import { Property } from "../ymate/models/Property";
+import { Command } from "../ymate/commands";
 /** 表示一个展开全部TreeDate节点指令对象实例
  * @author smalls
  */
@@ -36,6 +35,7 @@ export class TreeNodeCollpaseCommand extends Command {
    * @param args 触发指令时传入的参数清单
    */
   execute(editor: vscode.TextEditor, ...args) {
+    let { views } = require("../ymate");
     vscode.window.showInformationMessage("消息", "消息1", "消息2");
   }
 }

@@ -36,10 +36,12 @@
       "view/title": [
         {
           "command": "ymate.extensions.properties.tree.expand",
+          "when": "view == ymate.extensions.properties.explorer",
           "group": "navigation@1"
         },
         {
           "command": "ymate.extensions.properties.tree.collpase",
+          "when": "view == ymate.extensions.properties.explorer",
           "group": "navigation@1"
         }
       ],

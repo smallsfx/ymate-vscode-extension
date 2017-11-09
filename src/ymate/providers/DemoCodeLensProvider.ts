@@ -1,5 +1,4 @@
 import * as vscode from "vscode";
-import { OpenLineCommand } from "../../commands/OpenLineCommand";
 export class DemoCodeLensProvider implements vscode.CodeLensProvider {
 
   public onDidChangeCodeLenses?: vscode.Event<void>;
