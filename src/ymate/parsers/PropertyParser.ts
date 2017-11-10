@@ -1,16 +1,17 @@
 import * as vscode from 'vscode';
-import {ymate,views,DataType} from '../';
+import { ymate, views, DataType } from '../';
 
 /** 解析文本内容，生成参数实体对象并且返回
  * @param document 文本所属文档
  * @author smalls
  */
 export function PropertyParser(document: vscode.TextDocument): views.TreeNode {
-  
+
   let path = document.fileName.replace(vscode.workspace.rootPath + '/', '');
-  let catalog = views.TreeNode.build({
-    label:path,
-    collapsibleState:vscode.TreeItemCollapsibleState.Collapsed,
+  let catalog = views.buildTreeNode({
+    label: path,
+    file: document.fileName,
+    collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
     icon: 'ymate-file-properties'
   });
 
@@ -37,29 +38,29 @@ export function PropertyParser(document: vscode.TextDocument): views.TreeNode {
         let name = names[j];
         // 将名称列表中的最后一个视为属性名称，其他的均为层级包
         if (j == names.length - 1) {
-          let dataType =  parseValueType(value);
-          let item = views.TreeNode.build({
-            label:name,
-            value:value,
-            range:range,
-            document:document,
-            dataType:dataType,
-            collapsibleState:vscode.TreeItemCollapsibleState.None,
+          let dataType = parseValueType(value);
+          let item = views.buildTreeNode({
+            label: name,
+            value: value,
+            range: range,
+            document: document,
+            dataType: dataType,
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
             icon: parseIconName(dataType)
           });
 
           cur.children.push(item);
         } else {
           let child = cur.children.find(p => { return p.label === name });
-          if(child){
+          if (child) {
             cur = child;
-          }else{
-            let item = views.TreeNode.build({
-              label:name,
-              collapsibleState:vscode.TreeItemCollapsibleState.Collapsed,
+          } else {
+            let item = views.buildTreeNode({
+              label: name,
+              collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
               icon: 'ymate-type-package'
             });
-            cur.push( item );
+            cur.push(item);
             cur = item;
           }
         }

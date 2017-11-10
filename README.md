@@ -1,6 +1,10 @@
 # ymate-vscode-extension
 ymate extension for vscode
 
+##主要功能
+
+  1. 
+
 
 安装开发依赖
 ```

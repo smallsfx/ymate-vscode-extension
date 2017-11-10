@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import {ymate,views,DataType} from '../';
+import { ymate, views, DataType } from '../';
 
 /**
  * 解析文本内容，生成控制器实体对象并且返回
@@ -19,7 +19,7 @@ export function ControllerParser(document: vscode.TextDocument): views.TreeNode 
   if (text.indexOf(CONTROLLER) == -1) {
     return undefined;
   }
-  let treeNode :views.TreeNode;
+  let treeNode: views.TreeNode;
 
   for (var i = 0; i < document.lineCount; i++) {
     let line = document.lineAt(i);
@@ -50,16 +50,17 @@ export function ControllerParser(document: vscode.TextDocument): views.TreeNode 
     }
 
     if (treeNode) {
-      treeNode.children.push(views.TreeNode.build({
-        label:`${name} - [${method}]`,
-        document:document,
-        range:line.range,
-        icon:'ymate-type-api'
+      treeNode.children.push(views.buildTreeNode({
+        label: `${name} - [${method}]`,
+        document: document,
+        range: line.range,
+        icon: 'ymate-type-api'
       }));
     } else {
-      treeNode = views.TreeNode.build({
-        label:name,
-        collapsibleState:vscode.TreeItemCollapsibleState.Collapsed,
+      treeNode = views.buildTreeNode({
+        label: `${name}`,
+        file: document.fileName,
+        collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
         icon: 'ymate-type-controller'
       });
     }

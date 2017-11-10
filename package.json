@@ -27,12 +27,15 @@
       }
     },
     "menus": {
+     
       "editor/context": [],
       "editor/title": [],
       "editor/title/context": [],
       "explorer/context": [],
       "scm/resourceGroup/context": [],
       "scm/resourceState/context": [],
+      "view/item/context": [
+      ],
       "view/title": [
         {
           "command": "ymate.extensions.properties.tree.expand",
@@ -44,8 +47,7 @@
           "when": "view == ymate.extensions.properties.explorer",
           "group": "navigation@1"
         }
-      ],
-      "view/item/context": []
+      ]
     },
     "commands": [
       {
