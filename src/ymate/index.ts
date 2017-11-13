@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { ControllerParser } from "./parsers/ControllerParser";
 /** YMate实体对象 */
 export let ymate: YMate;
 
@@ -15,6 +16,7 @@ export class YMate {
   private constructor(context: vscode.ExtensionContext) {
     this.output = vscode.window.createOutputChannel("ymate 控制台");
     this._context = context;
+    this.parsers = [];
     this.rootNode = views.buildTreeNode({
       label: "根节点",
       collapsibleState: vscode.TreeItemCollapsibleState.Expanded
@@ -48,6 +50,9 @@ export class YMate {
   private _context: vscode.ExtensionContext;
   /** 表示树数据根节点元数据 */
   private rootNode: views.TreeNode;
+  /** 已注册的解析器集合 */
+  private parsers: IParser[];
+  private filterstring: string;
   // #endregion #region 私有变量
 
   // #region 公共属性
@@ -85,9 +90,106 @@ export class YMate {
 
   // #region 公共方法
 
-  /** 将TreeNode添加根节点 */
-  public push(item: views.TreeNode): void {
-    this.rootNode.push(item);
+  /** 注册一个解析器对象
+   * @param parser 需要注册的解析器实例
+   */
+  public registetParser(parser: IParser) {
+    // 不需要注册已经存在的解析器
+    if (this.parsers.find(p => p.id == parser.id)) {
+      return;
+    }
+    this.Debug(`注册解析器 [${parser.name}-${parser.id}-${parser.languageId}]`);
+
+    let node = views.buildTreeNode({
+      label: parser.name,
+      collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+      icon: parser.icon
+    });
+
+    this.rootNode.push(node);
+    this.explorer.refreshNode(this.rootNode);
+    this.parsers.push(parser);
+  }
+
+  /** 启动插件框架 */
+  public start(): void {
+    this.rootNode.children.forEach(node => {
+      node.children = [];
+    });
+    let pattern = this.getPattern();
+    vscode.workspace.findFiles(`**/{${pattern}}`, `**/target/`).then((uris: vscode.Uri[]) => {
+      uris.forEach(uri => {
+        vscode.workspace.openTextDocument(uri).then(document => { this.parse(document); });
+      });
+    });
+    // try {
+    //   let watcher = vscode.workspace.createFileSystemWatcher("", false, false, false);
+    //   watcher.onDidChange((uri) => {
+    //     console.log(`change-${uri.path}`);
+    //   }, this);
+
+    //   watcher.onDidCreate((uri) => {
+    //     console.log(`create-${uri.path}`);
+    //   }, this);
+
+    //   watcher.onDidDelete((uri) => {
+    //     console.log(`delete-${uri.path}`);
+    //   }, this);
+    // } catch (ex) {
+    //   console.log(`error-${ex}`);
+    // }
+  }
+
+  /** 设置节点及其子节点的状态
+   * @param node 需要设置状态的节点
+   * @param state 需要设置的状态
+   * @author smalls
+   */
+  private setNodeCollapsibleState(node: views.TreeNode, state: vscode.TreeItemCollapsibleState): void {
+    node.collapsibleState = state;
+    node.children.forEach(p => { this.setNodeCollapsibleState(p, state); });
+  }
+
+  public collpaseAll() {
+    let rootNode = ymate.Explorer.getRootNode();
+    this.setNodeCollapsibleState(rootNode, vscode.TreeItemCollapsibleState.Collapsed);
+    ymate.Explorer.refreshNode(rootNode);
+  }
+
+  public expandAll() {
+    let rootNode = ymate.Explorer.getRootNode();
+    this.setNodeCollapsibleState(rootNode, vscode.TreeItemCollapsibleState.Expanded);
+    ymate.Explorer.refreshNode(rootNode);
+  }
+
+  public parse(document: vscode.TextDocument): void {
+    this.parsers.forEach(parser => {
+      if (document.languageId != parser.languageId) {
+        return;
+      }
+      let node = parser.parseDocument(document);
+      if (node) {
+        let parentNode: views.TreeNode;
+        this.rootNode.children.forEach(child => {
+          if (child.matedata.label == parser.name) {
+            parentNode = child;
+          }
+        });
+        parentNode.push(node);
+        parentNode.sort();
+        this.explorer.refreshNode(parentNode);
+      }
+    });
+  }
+
+  private getPattern(): string {
+    let patterns: string[] = [];
+    this.parsers.forEach(parser => {
+      if (patterns.indexOf(parser.pattern) == -1) {
+        patterns.push(parser.pattern);
+      }
+    });
+    return patterns.join(",");
   }
 
   public refresh(item: views.TreeNode): void {
@@ -128,6 +230,7 @@ export class YMate {
     context.subscriptions.push(new commands.TreeNodeExpandCommand());
     context.subscriptions.push(new commands.OpenLineCommand());
     context.subscriptions.push(new commands.OpenDocumentCommand());
+    context.subscriptions.push(new commands.RefreshCommand());
   }
 
   // #endregion #region 私有方法
@@ -152,6 +255,25 @@ export namespace views {
     }
 
     return node;
+  }
+
+  /** 表示树数据节点的元数据
+   * @author smalls
+   * @version 1.0.0.1
+   */
+  export interface MateData {
+    /** 标签名称 */
+    label: string,
+    /** 文件路径：唯一标识 */
+    file?: string;
+    /** 实体节点的图标名称 */
+    icon?: string;
+    /** 实体节点的展开状态 */
+    collapsibleState?: vscode.TreeItemCollapsibleState;
+    /** 代码信息所属的文档对象*/
+    document?: vscode.TextDocument;
+    /** 代码信息对应的内容范围对象 */
+    range?: vscode.Range;
   }
 
   /** 提供树数据的数据提供程序
@@ -185,8 +307,7 @@ export namespace views {
 
     // #region Node Method
 
-    /**
-     * 表示元素或根已更改的可选事件。
+    /** 表示元素或根已更改的可选事件。
      * 表示根已改变，不要通过任何参数或传递'未定义'或'空'。
      */
     get onDidChangeTreeData(): vscode.Event<TreeNode> {
@@ -231,35 +352,6 @@ export namespace views {
 
   }
 
-  /** 表示树数据节点的元数据
-   * @author smalls
-   * @version 1.0.0.0
-   */
-  export interface MateData {
-    /** 元数据名称 */
-    // name: string;
-    /** 文件路径：唯一标识 */
-    file?: string;
-    /** 父级元数据名称 */
-    // parent: string;
-    /** 标签名称 */
-    label: string,
-    /** 属性的值  */
-    value?: string;
-    /** 实体节点的图标名称 */
-    icon?: string;
-    /** 实体节点的展开状态 */
-    collapsibleState?: vscode.TreeItemCollapsibleState;
-    /** 数据类型 */
-    dataType?: DataType;
-    /** 代码信息所属的文档对象*/
-    document?: vscode.TextDocument;
-    /** 代码信息对应的内容范围对象 */
-    range?: vscode.Range;
-    /** 代码信息对应的文件路径 */
-    uri?: vscode.Uri;
-  }
-
   /** 表示树数据的数据节点
    * @author smalls
    * @version 1.0.0.0
@@ -270,12 +362,26 @@ export namespace views {
       super(label);
       this.children = [];
     }
+
     /** 扩展的上下文 */
     public context: vscode.ExtensionContext;
 
     public push(node: TreeNode): void {
       if (node) {
-        this.children.push(node);
+        let existNode: TreeNode;
+        this.children.forEach((child) => {
+          if (child.matedata.label == node.matedata.label) {
+            existNode = child;
+          }
+        });
+
+        if (existNode) {
+          existNode.children = node.children;
+          existNode.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+        } else {
+          this.children.push(node);
+        }
+
         this.label = `${this.matedata.label} [${this.children.length}]`;
       }
     }
@@ -292,18 +398,6 @@ export namespace views {
           return 0;
         }
       });
-    }
-
-    public remove(node: TreeNode): void {
-      if (node) {
-        let newNodes: TreeNode[] = [];
-        this.children.forEach(child => {
-          if (child.label != node.label) {
-            newNodes.push(child);
-          }
-        });
-        this.children = newNodes;
-      }
     }
 
     public children: TreeNode[];
@@ -331,16 +425,6 @@ export namespace options {
 }
 
 export namespace utils {
-
-  /** 扫描目录中的文件
-  * @param pattern 需要扫描的文件规则，默认为`**\*.java`
-  */
-  export async function scan(include: string = '**/*.java', exclude?: string): Promise<vscode.Uri[]> {
-    let promise = new Promise<vscode.Uri[]>(resolve => {
-      vscode.workspace.findFiles(include, exclude).then(resolve);
-    });
-    return promise;
-  }
 
   // #region 中文与Unicode互相转换
 
@@ -435,6 +519,7 @@ export namespace commands {
   export abstract class Command extends vscode.Disposable {
 
     private _disposable: vscode.Disposable;
+
     /** 通过指令唯一标识构造一个指令对象实例
      * @param command 指令唯一标识
      */
@@ -456,14 +541,14 @@ export namespace commands {
       this._disposable && this._disposable.dispose();
     }
 
-    /**
-     * 执行指令
+    /** 执行指令
      * @param command 指令标识
      * @param args 调用指令时传入的参数清单
      */
     protected _execute(command: string, ...args) {
       return this.execute(...args);
     }
+
     /** 通过传入的参数清单调用指令
      * @param args 调用指令时传入的参数清单
      */
@@ -474,14 +559,15 @@ export namespace commands {
    * @author smalls
    */
   export abstract class ActiveEditorCommand extends Command {
+
     /** 通过指令表示构造一个活动编辑器指令对象实例
      * @param command 指令的唯一标识
      */
     constructor(command) {
       super(command);
     }
-    /**
-     * 执行指令
+
+    /** 执行指令
      * @param command 指令标识
      * @param args 调用指令时传入的参数清单
      */
@@ -517,16 +603,12 @@ export namespace commands {
      * @param args 触发指令时传入的参数清单
      */
     execute(editor: vscode.TextEditor, ...args) {
-
       if (args == undefined || args == null || args.length < 1) {
         return;
       }
-
       let metadata = args[1] as views.MateData;
       if (metadata == null) { return; }
-      if (metadata.uri) {
-        vscode.window.showTextDocument(metadata.uri);
-      } else if (metadata.document) {
+      if (metadata.document) {
         vscode.window.showTextDocument(metadata.document);
       }
     }
@@ -581,14 +663,14 @@ export namespace commands {
     constructor() {
       super(TreeNodeExpandCommand.Command);
     }
-
     /** 触发指令后的处理函数
-     * @param editor 触发指令的编辑器
      * @param args 触发指令时传入的参数清单
      */
     execute(...args) {
-
+      let { ymate } = require('./');
+      ymate.expandAll();
     }
+
   }
 
   export class TreeNodeCollpaseCommand extends Command {
@@ -601,15 +683,63 @@ export namespace commands {
     }
 
     /** 触发指令后的处理函数
-     * @param editor 触发指令的编辑器
      * @param args 触发指令时传入的参数清单
      */
-    execute(editor: vscode.TextEditor, ...args) {
-      let { views } = require("../ymate");
-      vscode.window.showInformationMessage("消息", "消息1", "消息2");
+    execute(...args) {
+      let { ymate } = require('./');
+      ymate.collpaseAll();
     }
   }
 
+  /** 设置节点及其子节点的状态
+   * @param node 需要设置状态的节点
+   * @param state 需要设置的状态
+   * @author smalls
+   */
+  function setNodeCollapsibleState(node: views.TreeNode, state: vscode.TreeItemCollapsibleState): void {
+    node.collapsibleState = state;
+    node.children.forEach(p => { setNodeCollapsibleState(p, state); });
+  }
+
+  export class RefreshCommand extends Command {
+    /** 指令标识 */
+    static Command = 'ymate.extensions.properties.refresh';
+
+    /** 构造一个定位属性代码所在行数指令对象实例 */
+    constructor() {
+      super(RefreshCommand.Command);
+    }
+
+    /** 触发指令后的处理函数
+     * @param args 触发指令时传入的参数清单
+     */
+    execute(...args) {
+      let { ymate } = require('./');
+      ymate.start();
+    }
+  }
+
+}
+
+/** 描述一个文档解析器对象
+ * @author smalls
+ */
+export interface IParser {
+  /** 解析器节点显示的内容 */
+  readonly name: string;
+  /** 解析器ID */
+  readonly id: string;
+  /** 解析器节点显示的图标 */
+  readonly icon: string;
+  /** 定义搜索的文件 */
+  readonly pattern: string;
+  /** 解析器所支持的文档语言编号 */
+  readonly languageId: string;
+  /** 解析文档内容并且返回解析后的文档，解析失败返回null
+   * @param document 需要解析的文档内容
+   * @return 返回解析后的节点，如果失败则返回null
+   */
+  parseDocument(document: vscode.TextDocument): views.TreeNode;
 }
 
 /** 描述文档文本中单个变化的事件。
@@ -664,28 +794,3 @@ export enum DataType {
   /** 数值类型：Number */
   Number
 }
-
-
-
-    // GlyphChars["ArrowBack"] = "\u21A9";
-    // GlyphChars["ArrowDown"] = "\u2193";
-    // GlyphChars["ArrowDropRight"] = "\u2937";
-    // GlyphChars["ArrowLeft"] = "\u2190";
-    // GlyphChars["ArrowLeftRight"] = "\u2194";
-    // GlyphChars["ArrowRight"] = "\u2192";
-    // GlyphChars["ArrowRightHollow"] = "\u21E8";
-    // GlyphChars["ArrowUp"] = "\u2191";
-    // GlyphChars["ArrowUpRight"] = "\u2197";
-    // GlyphChars["Asterisk"] = "\u2217";
-    // GlyphChars["Check"] = "\u2713";
-    // GlyphChars["Dash"] = "\u2014";
-    // GlyphChars["Dot"] = "\u2022";
-    // GlyphChars["DoubleArrowLeft"] = "\u226A";
-    // GlyphChars["DoubleArrowRight"] = "\u22D8";
-    // GlyphChars["Ellipsis"] = "\u2026";
-    // GlyphChars["MiddleEllipsis"] = "\u22EF";
-    // GlyphChars["Pensil"] = "\u270E";
-    // GlyphChars["Space"] = "\u00A0";
-    // GlyphChars["SquareWithBottomShadow"] = "\u274F";
-    // GlyphChars["SquareWithTopShadow"] = "\u2750";
-    // GlyphChars["ZeroWidthSpace"] = "\u200B";

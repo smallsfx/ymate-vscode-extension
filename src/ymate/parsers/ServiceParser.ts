@@ -1,21 +1,19 @@
 import * as vscode from 'vscode';
 import { views, IParser } from '../';
-
-const CAALOG_ID = "ymate.parser.java.interceptor";
-const CATALOG_NAME = "拦截器";
+const CAALOG_ID = "ymate.parser.java.service";
+const CATALOG_NAME = "服务类";
 const CATALOG_LANGUAGE_ID = "java";
 const CATALOG_PATTENT = "*.java";
-const CATALOG_ICON = 'catalog-interceptor';
+const CATALOG_ICON = 'catalog-service';
 
 const FILE_STATE = vscode.TreeItemCollapsibleState.None;
-const FILE_ICON = 'category-interceptor';
+const FILE_ICON = 'category-service';
 
-/** 表示一个Interceptor文档内容解析器对象的实例
+/** 表示一个Service文档内容解析器对象的实例
  * @author smalls
  * @version 1.0.0
  */
-export class InterceptorParser implements IParser {
-
+export class ServiceParser implements IParser {
   /** 解析器节点显示的内容 */
   public get name(): string { return CATALOG_NAME; }
 
@@ -31,16 +29,16 @@ export class InterceptorParser implements IParser {
   /** 解析器所支持的文档语言编号 */
   public get languageId(): string { return CATALOG_LANGUAGE_ID; }
 
-
   /** 解析文档内容并且返回解析后的文档，解析失败返回null
-   * @param document 需要解析的文档内容
-   * @return 返回解析后的节点，如果失败则返回null
-   */
+    * @param document 需要解析的文档内容
+    * @return 返回解析后的节点，如果失败则返回null
+    */
   public parseDocument(document: vscode.TextDocument): views.TreeNode {
-    const KEY = /public class (.+?Interceptor) extends/;
+    const ENTITY = /public class (.+?) implements/;
+    const HAS = "@Bean";
 
     let text = document.getText();
-    if (!KEY.exec(text)) {
+    if (text.indexOf(HAS) == -1) {
       return undefined;
     }
     let treeNode: views.TreeNode;
@@ -48,9 +46,9 @@ export class InterceptorParser implements IParser {
       let line = document.lineAt(i);
       let range = line.range;
       let lineText = line.text.trim();
-      let match = KEY.exec(lineText);
-      if (!match) { continue; }
-      let name = match[1];
+      let entityMatch = ENTITY.exec(lineText);
+      if (!entityMatch) { continue; }
+      let name = entityMatch[1];
       treeNode = views.buildTreeNode({
         label: `${name}`,
         document: document,
@@ -58,7 +56,6 @@ export class InterceptorParser implements IParser {
         collapsibleState: FILE_STATE,
         icon: FILE_ICON
       });
-      break;
     }
 
     return treeNode;

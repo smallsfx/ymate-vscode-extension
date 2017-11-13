@@ -2,8 +2,21 @@
   "name": "ymate-vscode-extension",
   "displayName": "ymate-vscode-extension",
   "description": "ymate extension for vscode",
-  "version": "0.0.1",
-  "publisher": "smalls",
+  "version": "1.0.0",
+  "author": {
+    "name": "smalls",
+    "email": "admin_small@163.com"
+  },
+  "keywords": [
+    "java",
+    "ymate"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/smallsfx/ymate-vscode-extension.git"
+  },
+  "publisher": "suninformation",
   "engines": {
     "vscode": "^1.17.0"
   },
@@ -14,6 +27,7 @@
     "*"
   ],
   "main": "./out/extension",
+  "icon": "images/ymate-vscode-estension.png",
   "contributes": {
     "configuration": {
       "type": "object",
@@ -27,16 +41,19 @@
       }
     },
     "menus": {
-     
       "editor/context": [],
       "editor/title": [],
       "editor/title/context": [],
       "explorer/context": [],
       "scm/resourceGroup/context": [],
       "scm/resourceState/context": [],
-      "view/item/context": [
-      ],
+      "view/item/context": [],
       "view/title": [
+        {
+          "command": "ymate.extensions.properties.refresh",
+          "when": "view == ymate.extensions.properties.explorer",
+          "group": "navigation@1"
+        },
         {
           "command": "ymate.extensions.properties.tree.expand",
           "when": "view == ymate.extensions.properties.explorer",
@@ -55,8 +72,8 @@
         "title": "全部收起",
         "category": "ymate.explorer",
         "icon": {
-          "dark": "images/dark/icon-ymate-collpase.svg",
-          "light": "images/light/icon-ymate-collpase.svg"
+          "dark": "images/dark/action-collpase.svg",
+          "light": "images/light/action-collpase.svg"
         }
       },
       {
@@ -64,8 +81,17 @@
         "title": "全部展开",
         "category": "ymate.explorer",
         "icon": {
-          "dark": "images/dark/icon-ymate-expand.svg",
-          "light": "images/light/icon-ymate-expand.svg"
+          "dark": "images/dark/action-expand.svg",
+          "light": "images/light/action-expand.svg"
+        }
+      },
+      {
+        "command": "ymate.extensions.properties.refresh",
+        "title": "刷新",
+        "category": "ymate.explorer",
+        "icon": {
+          "dark": "images/dark/action-refresh.svg",
+          "light": "images/light/action-refresh.svg"
         }
       }
     ],
@@ -82,27 +108,12 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "postinstall": "node ./node_modules/vscode/bin/install",
-    "test": "npm run compile && node ./node_modules/vscode/bin/test"
-  },
-  "dependencies": {
-    "applicationinsights": "0.21.0",
-    "copy-paste": "1.3.0",
-    "lodash.debounce": "4.0.8",
-    "lodash.escaperegexp": "4.1.2",
-    "lodash.isequal": "4.5.0",
-    "lodash.once": "4.1.1"
+    "postinstall": "node ./node_modules/vscode/bin/install"
   },
   "devDependencies": {
-    "@types/copy-paste": "1.1.30",
-    "@types/iconv-lite": "0.0.1",
-    "@types/mocha": "2.2.43",
-    "@types/node": "8.0.41",
-    "@types/tmp": "0.0.33",
-    "husky": "^0.14.3",
-    "mocha": "4.0.1",
-    "tslint": "5.7.0",
-    "typescript": "2.5.3",
-    "vscode": "1.1.6"
+    "typescript": "^2.6.1",
+    "vscode": "^1.1.6",
+    "@types/node": "^8.0.51",
+    "@types/mocha": "^2.2.44"
   }
 }

@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-export class DemoProvider implements vscode.CompletionItemProvider {
+export class SnippetProvider implements vscode.CompletionItemProvider {
   public provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): vscode.CompletionItem[] {
 
     var completionItems = [];
