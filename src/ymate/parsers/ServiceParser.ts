@@ -34,7 +34,7 @@ export class ServiceParser implements IParser {
     * @return 返回解析后的节点，如果失败则返回null
     */
   public parseDocument(document: vscode.TextDocument): views.TreeNode {
-    const ENTITY = /public class (.+?) implements/;
+    const ENTITY = /public +class +(.+?) +implements/;
     const HAS = "@Bean";
 
     let text = document.getText();

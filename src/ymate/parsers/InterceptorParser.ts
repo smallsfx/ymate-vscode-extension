@@ -37,10 +37,11 @@ export class InterceptorParser implements IParser {
    * @return 返回解析后的节点，如果失败则返回null
    */
   public parseDocument(document: vscode.TextDocument): views.TreeNode {
-    const KEY = /public class (.+?Interceptor) extends/;
+    const KEY = /public +class +(.+?Interceptor) +extends/;
+    const KEY2 = /public +class +(.+?Interceptor) +implements +IInterceptor/;
 
     let text = document.getText();
-    if (!KEY.exec(text)) {
+    if (!KEY.exec(text) && !KEY2.exec(text)) {
       return undefined;
     }
     let treeNode: views.TreeNode;
@@ -48,8 +49,14 @@ export class InterceptorParser implements IParser {
       let line = document.lineAt(i);
       let range = line.range;
       let lineText = line.text.trim();
-      let match = KEY.exec(lineText);
-      if (!match) { continue; }
+      let match = KEY2.exec(lineText);
+      if (!match) {
+        match = KEY.exec(lineText);
+        if (!match) {
+          continue;
+        }
+        //continue;
+      }
       let name = match[1];
       treeNode = views.buildTreeNode({
         label: `${name}`,

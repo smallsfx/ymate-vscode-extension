@@ -2,7 +2,7 @@
   "name": "ymate-vscode-extension",
   "displayName": "ymate-vscode-extension",
   "description": "ymate extension for vscode",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "author": {
     "name": "smalls",
     "email": "admin_small@163.com"

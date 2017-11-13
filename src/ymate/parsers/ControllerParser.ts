@@ -88,7 +88,8 @@ export class ControllerParser implements IParser {
       } else {
         treeNode = views.buildTreeNode({
           label: `${name}`,
-          file: document.fileName,
+          document: document,
+          range: line.range,
           collapsibleState: FILE_STATE,
           icon: FILE_ICON
         });
