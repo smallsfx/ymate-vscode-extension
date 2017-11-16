@@ -2,7 +2,7 @@
   "name": "ymate-vscode-extension",
   "displayName": "ymate-vscode-extension",
   "description": "ymate extension for vscode",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "author": {
     "name": "smalls",
     "email": "admin_small@163.com"
@@ -113,6 +113,7 @@
   "devDependencies": {
     "typescript": "^2.6.1",
     "vscode": "^1.1.6",
+    "vscode-languageclient": "^3.4.5",
     "@types/node": "^8.0.51",
     "@types/mocha": "^2.2.44"
   }

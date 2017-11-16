@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
-import { views, DataType, IParser } from '../';
+import { views, BaseParser } from '../ymate';
 
-const CAALOG_ID = "ymate.parser.properties.peroperty";
+const CATALOG_ID = "ymate.parser.properties.peroperty";
 const CATALOG_NAME = "配置项";
 const CATALOG_LANGUAGE_ID = "properties";
 const CATALOG_PATTENT = "*.properties";
@@ -17,27 +17,19 @@ const PACKAGE_ICON = 'type-package';
  * @author smalls
  * @version 1.0.0
  */
-export class PropertyParser implements IParser {
-  /** 解析器节点显示的内容 */
-  public get name(): string { return CATALOG_NAME; }
+export class PropertyParser extends BaseParser {
 
-  /** 解析器ID */
-  public get id(): string { return CAALOG_ID; }
+  constructor() {
+    super(
+      CATALOG_NAME,
+      CATALOG_ID,
+      CATALOG_ICON,
+      CATALOG_PATTENT,
+      CATALOG_LANGUAGE_ID
+    );
+  }
 
-  /** 解析器节点显示的图标 */
-  public get icon(): string { return CATALOG_ICON; }
-
-  /** 定义搜索的文件 */
-  public get pattern(): string { return CATALOG_PATTENT; }
-
-  /** 解析器所支持的文档语言编号 */
-  public get languageId(): string { return CATALOG_LANGUAGE_ID; }
-
-  /** 解析文本内容，生成参数实体对象并且返回
-   * @param document 文本所属文档
-   * @author smalls
-   */
-  public parseDocument(document: vscode.TextDocument): views.TreeNode {
+  protected parseDocument(document: vscode.TextDocument): views.TreeNode {
 
     let path = document.fileName.replace(vscode.workspace.rootPath + '/', '');
     let catalog = views.buildTreeNode({
@@ -70,12 +62,11 @@ export class PropertyParser implements IParser {
           let name = names[j];
           // 将名称列表中的最后一个视为属性名称，其他的均为层级包
           if (j == names.length - 1) {
-            let dataType = parseValueType(value);
             let item = views.buildTreeNode({
               label: name,
               range: range,
               document: document,
-              icon: parseIconName(dataType)
+              icon: this.parseIconName(value)
             });
             cur.push(item);
           } else {
@@ -99,47 +90,22 @@ export class PropertyParser implements IParser {
 
     return catalog;
   }
-}
 
-/** 解析文本内容判断内容所属数据类型
- * @param text 需要解析数据类型的文本内容
- * @author smalls
- */
-function parseValueType(text: string): DataType {
-  if (text) {
+  /** 根据文本内容判断节点的图标名称
+   * @param text 需要解析图标的文本内容
+   * @author smalls
+   */
+  private parseIconName(text: string): string {
+    let iconname: string;
     if (text.toLocaleLowerCase() == 'true' || text.toLocaleLowerCase() == 'false') {
-      return DataType.Boolean;
+      iconname = "boolean";
     } else if (!isNaN(parseInt(text))) {
-      return DataType.Number;
+      iconname = "number";
     } else if (text.indexOf('|') > 0 || text.indexOf(',') > 0) {
-      return DataType.Enum;
+      iconname = "enum";
     } else {
-      return DataType.String;
+      iconname = "string";
     }
-  } else {
-    return DataType.String;
+    return `type-${iconname}`;
   }
-}
-
-/** 根据数据类型判断节点的图标名称
- * @param type 数据类型
- * @author smalls
- */
-function parseIconName(type: DataType): string {
-  let iconname: string;
-  switch (type) {
-    case DataType.Boolean:
-      iconname = 'boolean';
-      break;
-    case DataType.Enum:
-      iconname = 'enum';
-      break;
-    case DataType.Number:
-      iconname = 'number';
-      break;
-    case DataType.String:
-      iconname = 'string';
-      break;
-  }
-  return `type-${iconname}`;
 }

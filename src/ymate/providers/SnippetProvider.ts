@@ -14,6 +14,7 @@ export class SnippetProvider implements vscode.CompletionItemProvider {
   public resolveCompletionItem(item: vscode.CompletionItem, token: vscode.CancellationToken): any {
     return item;
   }
+  
   dispose() {
 
   }
