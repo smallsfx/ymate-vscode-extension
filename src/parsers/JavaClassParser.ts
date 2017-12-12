@@ -14,8 +14,8 @@ const CLASS_ICON = 'type-java';
 const CLASS_STATE = vscode.TreeItemCollapsibleState.None;
 const PACKAGE_STATE = vscode.TreeItemCollapsibleState.Collapsed;
 
-const PACKAGE = /package +(.+?);/;
-const IMPORT = /import +(.+?);/;
+const PACKAGE = /^package +(.+?);/;
+const IMPORT = /^import +(.+?);/;
 
 const CLASS = /class +(.+?) +/;
 
@@ -41,8 +41,11 @@ export class JavaClassParser extends BaseParser {
     for (var i = 0; i < document.lineCount; i++) {
       let line = document.lineAt(i);
       let lineText = line.text.trim();
+      
       let match = PACKAGE.exec(lineText);
       if (match) {
+
+        console.log(lineText);
         packageNode = this.parsePackage(match[1], false);
       }
 
